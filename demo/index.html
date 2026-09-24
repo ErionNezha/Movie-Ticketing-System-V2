@@ -1,0 +1,94 @@
+<!-- Created by Erion Nezha — © 2026 All rights reserved -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎬 Movie Ticketing System — Web Port</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0b0f14;color:#e6e6e6;font-family:'Consolas','Courier New',monospace;min-height:100vh;display:flex;flex-direction:column}
+header.top{background:linear-gradient(135deg,#101820,#1b2a3a);padding:18px 20px;text-align:center;border-bottom:2px solid #00d4ff33}
+header.top h1{font-size:1.25rem;color:#fff}
+header.top p{color:#9fb3c8;font-size:.82rem;margin-top:6px}
+.wrap{flex:1;max-width:900px;width:100%;margin:0 auto;padding:18px;display:flex;flex-direction:column}
+.term{background:#05070b;border:1px solid #00d4ff33;border-radius:10px;padding:16px;height:60vh;overflow-y:auto;white-space:pre-wrap;font-size:.92rem;line-height:1.6;color:#c8ffb0}
+.inrow{display:flex;align-items:center;gap:8px;margin-top:10px;background:#05070b;border:1px solid #00d4ff55;border-radius:8px;padding:10px 14px}
+.inrow .prompt{color:#00d4ff;font-weight:700}
+.inrow input{flex:1;background:transparent;border:none;outline:none;color:#fff;font-family:inherit;font-size:.95rem}
+footer{text-align:center;padding:14px;color:#5c6b7f;font-size:.85rem;border-top:1px solid #ffffff10}
+footer strong{color:#9fb3c8}
+</style>
+</head>
+<body>
+<header class="top"><h1>🎬 Movie Ticketing System</h1><p>Web port of main.c — add, display, modify, search and delete ticket records.</p></header>
+<div class="wrap"><div class="term" id="term"></div>
+<div class="inrow"><span class="prompt">&rsaquo;</span><input id="inp" autocomplete="off" spellcheck="false" placeholder="Type here and press Enter…"></div></div>
+<footer>Krijuar nga <strong>Erion Nezha</strong> — © 2026</footer>
+<script>
+const termEl=document.getElementById('term'),inp=document.getElementById('inp');
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function print(t){termEl.innerHTML+=esc(t)+'\n';termEl.scrollTop=termEl.scrollHeight;}
+function ask(q){return new Promise(function(res){print(q);inp.focus();function h(e){if(e.key==='Enter'){inp.removeEventListener('keydown',h);var v=inp.value;inp.value='';print('> '+v);res(v.trim());}}inp.addEventListener('keydown',h);});}
+function pause(){return new Promise(function(r){setTimeout(r,250);});}
+window.addEventListener('load',function(){main();});
+
+var recs=[];
+function validNum(s){return /^[0-9]{4}$/.test(s)&&+s>=1&&+s<=9999;}
+function validTime(s){return /^[0-9]{4}$/.test(s)&&+s>=1000&&+s<=2300;}
+function show(r){print('Booking No: '+r.mnum+'\nCustomer: '+r.cname+'\nMovie: '+r.mname+'\nSchedule: '+r.mdate+'\nTime: '+r.mtime+'\nGuests: '+r.guests+'\nHouse No: '+r.house+'\nTicket Type: '+r.ttype+'\nTotal Fee: '+r.fee+'\n-------------------------');}
+var ALLMOVIES=['Avengers: Endgame','Spider-Man: No Way Home','The Dark Knight','Inception','Titanic','Avatar','Joker','Interstellar'];
+async function addRec(){
+  var r={};
+  r.mnum=await ask('Enter Movie Booking Number (XXXX): ');
+  while(!validNum(r.mnum))r.mnum=await ask('Re-enter Movie Booking Number! It should be between 0001 to 9999!: ');
+  r.cname=await ask('Enter Name of Customer: ');
+  r.mname=await ask('Enter Name of Movie: ');
+  r.mdate=await ask('Enter Movie Schedule (DD-MM-YYYY): ');
+  r.mtime=await ask('Enter Time (XXXX): ');
+  while(!validTime(r.mtime))r.mtime=await ask('Re-enter Time! It should be in 24-hour format and between 1000 to 2300!: ');
+  r.guests=await ask('Enter Number of Guests: ');
+  r.house=await ask('Enter House Number: ');
+  r.ttype=await ask('Enter Ticket Type: ');
+  r.fee=await ask('Enter Total Fee: ');
+  recs.push(r);
+  print('Record insert sucessful!');
+  var a=await ask('Add another record (y/n)?');
+  if(a.toLowerCase()==='y')await addRec();
+}
+async function main(){
+  print('\n\t*** Welcome Movie Ticketing System ***\n\t(web port of main.c)');
+  while(true){
+    print('\n\n--<:Main Menu:>--\n');
+    print('\n 1. Add New Movie Ticketing Record(s)\n\n 2. Display All Movie Ticketing Records\n\n 3. Modify Movie Ticketing Record(s)\n\n 4. Search Movie Ticketing Record(s)\n\n 5. Delete Movie Ticketing Record(s)\n\n 6. All Movies\n\n 7. Quit');
+    var o=await ask('\nWhat is your option (1-7)? ');
+    if(o==='1'){await addRec();}
+    else if(o==='2'){
+      if(!recs.length){print('No records found.');continue;}
+      print('\n--- All Records ---');recs.forEach(show);
+    }else if(o==='3'){
+      var n=await ask('Enter Booking Number to modify: ');
+      var r=recs.find(function(x){return x.mnum===n;});
+      if(!r){print('Record not found.');continue;}
+      show(r);
+      r.cname=await ask('New Customer Name (was '+r.cname+'): ')||r.cname;
+      r.mname=await ask('New Movie Name (was '+r.mname+'): ')||r.mname;
+      r.fee=await ask('New Total Fee (was '+r.fee+'): ')||r.fee;
+      print('Record modified successfully!');
+    }else if(o==='4'){
+      var n=await ask('Enter Booking Number to search: ');
+      var r=recs.find(function(x){return x.mnum===n;});
+      if(!r){print('Record not found.');continue;}show(r);
+    }else if(o==='5'){
+      var n=await ask('Enter Booking Number to delete: ');
+      var i=recs.findIndex(function(x){return x.mnum===n;});
+      if(i<0){print('Record not found.');continue;}
+      recs.splice(i,1);print('Record deleted successfully!');
+    }else if(o==='6'){print('\n--- All Movies ---');ALLMOVIES.forEach(function(m,i){print((i+1)+'. '+m);});
+    }else if(o==='7'){print('See you next time :)');break;}
+    else{print('Please select a correct number (1-7)!');}
+  }
+}
+</script>
+</body>
+</html>
